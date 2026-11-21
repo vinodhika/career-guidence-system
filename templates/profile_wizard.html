@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% block title %}My Profile & Skills Assessment | Career Recommendation System{% endblock %}
+
+{% block content %}
+<style>
+  .wizard-tabs-nav {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #E2E8F0;
+    padding-bottom: 12px;
+  }
+  .wizard-tab-btn {
+    padding: 8px 18px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: none;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .wizard-tab-btn.active {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .wizard-section {
+    display: none;
+  }
+  .wizard-section.active {
+    display: block;
+  }
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 6px;
+  }
+  .form-control {
+    width: 100%;
+    height: 44px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+  .interests-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .interest-choice-card {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .interest-choice-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .skills-tag-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .user-skill-pill {
+    background: #fff;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+</style>
+
+<div style="margin-bottom: 24px;">
+  <h2 style="font-size: 24px; font-weight: 800; font-family: var(--font-heading); color: #1E293B;">
+    🎓 Career Profile & Assessment
+  </h2>
+  <p style="font-size: 13px; color: var(--text-secondary);">
+    Update your education, 10 SRS interest categories, and technical/soft skills to recalculate your recommendations.
+  </p>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="wizard-tabs-nav">
+  <button type="button" class="wizard-tab-btn active" onclick="switchWizardTab('education', this)">
+    1. Education & Background
+  </button>
+  <button type="button" class="wizard-tab-btn" onclick="switchWizardTab('interests', this)">
+    2. Interest Assessment (10 Fields)
+  </button>
+  <button type="button" class="wizard-tab-btn" onclick="switchWizardTab('skills', this)">
+    3. Skills & Proficiency
+  </button>
+</div>
+
+<!-- SECTION 1: EDUCATION -->
+<div id="section-education" class="wizard-section active">
+  <div class="ui-card">
+    <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 16px;">Educational Qualifications</h3>
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_education">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Professional Headline / Bio</label>
+          <input type="text" name="headline" class="form-control" value="{{ profile.headline }}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Education Stage</label>
+          <select name="education_level" class="form-control">
+            <option value="school" {% if profile.education_level == 'school' %}selected{% endif %}>School / 10th-12th Grade</option>
+            <option value="diploma" {% if profile.education_level == 'diploma' %}selected{% endif %}>Diploma / Polytechnic</option>
+            <option value="undergraduate" {% if profile.education_level == 'undergraduate' %}selected{% endif %}>Undergraduate / Bachelor Degree (BCA, B.Tech, B.Sc...)</option>
+            <option value="postgraduate" {% if profile.education_level == 'postgraduate' %}selected{% endif %}>Postgraduate / Master Degree (MCA, M.Tech, MBA...)</option>
+            <option value="doctorate" {% if profile.education_level == 'doctorate' %}selected{% endif %}>Doctorate / Professional</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Qualification / Degree Name</label>
+          <input type="text" name="qualification" class="form-control" value="{{ profile.qualification }}" placeholder="e.g. 11th Grade Science (PCM), BCA, B.Tech CS">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Institution / School / University</label>
+          <input type="text" name="institution" class="form-control" value="{{ profile.institution }}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Specialization / Major Subjects</label>
+          <input type="text" name="specialization" class="form-control" value="{{ profile.specialization }}" placeholder="e.g. Physics, Chemistry, Math, Computer Science">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Experience Stage</label>
+          <select name="experience_level" class="form-control">
+            <option value="Beginner/Student" {% if profile.experience_level == 'Beginner/Student' %}selected{% endif %}>Beginner / Student</option>
+            <option value="Intermediate/Graduate" {% if profile.experience_level == 'Intermediate/Graduate' %}selected{% endif %}>Early Career / Recent Graduate</option>
+            <option value="Experienced" {% if profile.experience_level == 'Experienced' %}selected{% endif %}>Experienced Professional</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <button type="submit" class="btn btn-primary">
+          💾 Save Education & Recalculate
+        </button>
+        <button type="submit" name="redirect_to" value="careers" class="btn btn-outline" style="border-color: var(--primary); color: var(--primary);">
+          🚀 Save & View All Best Matches →
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Live Recalculated Recommendations Preview -->
+  {% if top_recommendations %}
+    <div class="ui-card" style="margin-top: 24px; background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%); border-color: #DDD6FE;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h3 style="font-size: 16px; font-weight: 800; color: #1E293B;">
+            🎯 Current Top Recalculated Career Matches
+          </h3>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+            Updated dynamically based on your education, interests, and skills.
+          </p>
+        </div>
+        <a href="{% url 'careers' %}" class="btn btn-outline" style="font-size: 12px; padding: 6px 14px;">
+          View Full Best Matches List →
+        </a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+        {% for rec in top_recommendations %}
+          <div style="background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="badge badge-primary" style="font-size: 10px;">{{ rec.career.category }}</span>
+              <strong style="color: #059669; font-size: 13px;">{{ rec.score_round }}%</strong>
+            </div>
+            <h4 style="font-size: 14px; font-weight: 800; color: #1E293B; margin-bottom: 8px;">
+              {{ rec.career.title }}
+            </h4>
+            <div class="progress-track" style="margin-bottom: 10px;">
+              <div class="progress-fill fill-teal" style="width: {{ rec.score_round }}%;"></div>
+            </div>
+            <a href="{% url 'career_detail' rec.career.slug %}" style="font-size: 11px; font-weight: 700; color: var(--primary);">
+              Explore Path →
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- SECTION 2: INTERESTS (10 Categories SRS FR-11) -->
+<div id="section-interests" class="wizard-section">
+  <div class="ui-card">
+    <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 8px;">Interest Assessment (SRS FR-11)</h3>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+      Select all categories that align with your natural curiosity and passion. These carry a 40% weighting in recommendation matching.
+    </p>
+
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_interests">
+
+      <div class="interests-grid">
+        {% for interest in all_interests %}
+          <div class="interest-choice-card {% if interest.id in user_interest_ids %}selected{% endif %}">
+            <input type="checkbox" name="interests" value="{{ interest.id }}" id="int-{{ interest.id }}" {% if interest.id in user_interest_ids %}checked{% endif %} style="margin-top: 4px;">
+            <label for="int-{{ interest.id }}" style="cursor: pointer; flex: 1;">
+              <strong style="font-size: 14px; color: #1E293B; display: block;">{{ interest.category_name }}</strong>
+              <span style="font-size: 12px; color: var(--text-secondary);">{{ interest.description }}</span>
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top: 24px;">
+        <button type="submit" class="btn btn-primary">Save Interests & Recalculate Matches</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SECTION 3: SKILLS ASSESSMENT -->
+<div id="section-skills" class="wizard-section">
+  <div class="ui-card" style="margin-bottom: 24px;">
+    <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 8px;">Your Current Skills Portfolio</h3>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+      Technical and soft skills carry 30% weighting in the matching model.
+    </p>
+
+    <div class="skills-tag-grid">
+      {% for us in user_skills %}
+        <div class="user-skill-pill">
+          <div>
+            <strong>{{ us.skill.name }}</strong>
+            <span class="badge {% if us.proficiency == 'Advanced' %}badge-success{% elif us.proficiency == 'Intermediate' %}badge-primary{% else %}badge-warning{% endif %}" style="margin-left: 6px;">
+              {{ us.proficiency }}
+            </span>
+          </div>
+          <form method="POST" style="margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="remove_skill">
+            <input type="hidden" name="user_skill_id" value="{{ us.id }}">
+            <button type="submit" style="background:none; border:none; color:#EF4444; cursor:pointer; font-size:16px;">&times;</button>
+          </form>
+        </div>
+      {% empty %}
+        <p style="color: var(--text-muted); font-size: 13px;">No skills added yet. Add skills below.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Add Skill Form -->
+  <div class="ui-card">
+    <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px;">Add or Upgrade a Skill</h3>
+    <form method="POST" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_skills">
+
+      <div style="flex: 2; min-width: 200px;">
+        <label class="form-label">Select Skill</label>
+        <select name="skill_id" class="form-control" required>
+          <option value="">-- Choose Skill --</option>
+          {% for sk in all_skills %}
+            <option value="{{ sk.id }}" {% if sk.id in user_skill_ids %}style="font-weight:bold;"{% endif %}>
+              {{ sk.name }} ({{ sk.domain }} - {{ sk.category|title }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="flex: 1; min-width: 160px;">
+        <label class="form-label">Proficiency Level</label>
+        <select name="proficiency" class="form-control">
+          <option value="Beginner">Beginner (Foundational)</option>
+          <option value="Intermediate" selected>Intermediate (Working)</option>
+          <option value="Advanced">Advanced (Expert)</option>
+        </select>
+      </div>
+
+      <div>
+        <button type="submit" class="btn btn-primary" style="height: 44px;">Add Skill</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function switchWizardTab(tabKey, btnElement) {
+    document.querySelectorAll('.wizard-section').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.wizard-tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('section-' + tabKey).classList.add('active');
+    btnElement.classList.add('active');
+  }
+</script>
+{% endblock %}

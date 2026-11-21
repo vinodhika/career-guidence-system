@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% block title %}Explore Careers | Best Matches{% endblock %}
+
+{% block content %}
+<style>
+  /* Subnav Tabs matching UI Screen 3 */
+  .subnav-tabs-bar {
+    background: #0F172A;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    margin-bottom: 24px;
+  }
+  .subnav-links {
+    display: flex;
+    gap: 8px;
+  }
+  .subnav-link {
+    color: #94A3B8;
+    padding: 16px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .subnav-link:hover, .subnav-link.active {
+    color: #fff;
+    border-bottom-color: #38BDF8;
+  }
+  .fav-counter-btn {
+    background: #E11D48;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .fav-counter-btn:hover {
+    background: #BE123C;
+    transform: translateY(-1px);
+  }
+
+  /* Filter Bar matching UI Screen 3 */
+  .filter-bar-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .filter-pills-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    border: 1px solid #E2E8F0;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .filter-pill:hover, .filter-pill.active {
+    background: #EFF6FF;
+    border-color: #3B82F6;
+    color: #1D4ED8;
+  }
+
+  /* Section Header */
+  .matches-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  /* Career Cards Grid matching UI Screen 3 */
+  .career-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 1200px) {
+    .career-cards-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .career-cards-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .career-cards-grid { grid-template-columns: 1fr; }
+  }
+
+  .career-match-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+    position: relative;
+  }
+  .career-match-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+  }
+  .card-img-banner {
+    height: 140px;
+    width: 100%;
+    object-fit: cover;
+    background: #E2E8F0;
+  }
+  .card-category-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #E11D48;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .card-refresh-icon {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    font-size: 13px;
+  }
+  .card-content-body {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .career-card-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1E293B;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .card-match-score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #059669;
+  }
+  .card-match-bar {
+    height: 6px;
+    background: #E2E8F0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .card-match-fill {
+    height: 100%;
+    background: #10B981;
+    border-radius: 999px;
+  }
+  .related-careers-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .card-footer-actions {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+  }
+  .card-icon-action {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    color: #64748B;
+    transition: transform 0.2s;
+  }
+  .card-icon-action:hover {
+    transform: scale(1.15);
+  }
+  .card-icon-action.favorited {
+    color: #E11D48;
+  }
+</style>
+
+<!-- Top Subnav Tabs matching UI Screen 3 -->
+<div class="subnav-tabs-bar">
+  <div class="subnav-links">
+    <a href="{% url 'careers' %}" class="subnav-link active">
+      <i data-lucide="briefcase" style="width: 16px; height: 16px;"></i>
+      <span>Careers</span>
+    </a>
+    <a href="{% url 'profile_wizard' %}" class="subnav-link">
+      <i data-lucide="award" style="width: 16px; height: 16px;"></i>
+      <span>Qualifications</span>
+    </a>
+    <a href="{% url 'roadmap' %}" class="subnav-link">
+      <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i>
+      <span>Destinations</span>
+    </a>
+    <a href="{% url 'career_compare' %}" class="subnav-link">
+      <i data-lucide="calendar" style="width: 16px; height: 16px;"></i>
+      <span>Planner & Compare</span>
+    </a>
+  </div>
+
+  <div>
+    <a href="{% url 'careers' %}?favorites=1" class="fav-counter-btn">
+      <span>❤️ View Favourite Careers ({{ fav_count }})</span>
+    </a>
+  </div>
+</div>
+
+<!-- Refine and Filter Bar matching UI Screen 3 -->
+<div class="filter-bar-card">
+  <div class="filter-pills-row">
+    <span style="font-size: 13px; font-weight: 700; color: #1E293B; margin-right: 6px;">
+      <i data-lucide="filter" style="width: 14px; height: 14px; display: inline;"></i> Refine and filter:
+    </span>
+    <a href="{% url 'careers' %}" class="filter-pill {% if not selected_category or selected_category == 'all' %}active{% endif %}">
+      All Careers
+    </a>
+    <a href="{% url 'careers' %}?category=Technology" class="filter-pill {% if selected_category == 'Technology' %}active{% endif %}">
+      Technology & Software
+    </a>
+    <a href="{% url 'careers' %}?category=Engineering" class="filter-pill {% if selected_category == 'Engineering' %}active{% endif %}">
+      Engineering
+    </a>
+    <a href="{% url 'careers' %}?category=Finance" class="filter-pill {% if selected_category == 'Finance' %}active{% endif %}">
+      Finance & Governance
+    </a>
+    <a href="{% url 'careers' %}?category=Creative" class="filter-pill {% if selected_category == 'Creative' %}active{% endif %}">
+      Design & Creative
+    </a>
+    <a href="{% url 'careers' %}?edu=undergraduate" class="filter-pill {% if selected_edu == 'undergraduate' %}active{% endif %}">
+      Degree (3+ years)
+    </a>
+    <a href="{% url 'careers' %}?edu=school" class="filter-pill {% if selected_edu == 'school' %}active{% endif %}">
+      High School / A-levels
+    </a>
+  </div>
+
+  <div>
+    {% if view_binned %}
+      <a href="{% url 'careers' %}" class="filter-pill active">← Back to Active</a>
+    {% else %}
+      <a href="{% url 'careers' %}?binned=1" class="filter-pill" style="color: #64748B;">
+        🗑️ View Binned Careers ({{ binned_count }})
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Best Matches Section Header -->
+<div class="matches-section-header">
+  <div>
+    <h2 style="font-size: 22px; font-weight: 800; font-family: var(--font-heading); color: #1E293B;">
+      {% if view_favorites %}Favourite Careers
+      {% elif view_binned %}Binned / Hidden Careers
+      {% else %}Best Matches
+      {% endif %}
+    </h2>
+    <p style="font-size: 13px; color: var(--text-secondary);">
+      Ranked using weighted matching: Interest (40%), Education (30%), Skills (30%)
+    </p>
+  </div>
+  <div>
+    <span class="badge badge-primary">{{ recommendations|length }} Options Available</span>
+  </div>
+</div>
+
+<!-- Career Grid matching UI Screen 3 -->
+<div class="career-cards-grid">
+  {% for rec in recommendations %}
+    <div class="career-match-card" id="career-card-{{ rec.career.id }}">
+      <div style="position: relative;">
+        <img src="{{ rec.career.image_url }}" alt="{{ rec.career.title }}" class="card-img-banner">
+        <span class="card-category-badge">Career</span>
+        <div class="card-refresh-icon" title="Recalculated from latest profile">🔄</div>
+      </div>
+
+      <div class="card-content-body">
+        <h3 class="career-card-title">{{ rec.career.title }}</h3>
+        
+        <div class="card-match-score-row">
+          <span>Match Score</span>
+          <span>{{ rec.score_round }}%</span>
+        </div>
+        <div class="card-match-bar">
+          <div class="card-match-fill" style="width: {{ rec.score_round }}%;"></div>
+        </div>
+
+        <div class="related-careers-text">
+          {{ rec.career.related_careers_count }} related careers in {{ rec.career.category }}
+        </div>
+
+        <div class="card-footer-actions">
+          <div style="display: flex; gap: 8px;">
+            <button class="card-icon-action {% if rec.is_favorited %}favorited{% endif %}"
+                    onclick="toggleFavoriteCareer({{ rec.career.id }}, this)"
+                    title="Bookmark / Favorite Career">
+              {% if rec.is_favorited %}❤️{% else %}🤍{% endif %}
+            </button>
+            <button class="card-icon-action"
+                    onclick="binCareer({{ rec.career.id }}, 'career-card-{{ rec.career.id }}')"
+                    title="Hide / Bin Career">
+              🗑️
+            </button>
+            <a href="{% url 'career_compare' %}?c1={{ rec.career.slug }}" class="card-icon-action" title="Compare this career">
+              ⚖️
+            </a>
+          </div>
+
+          <a href="{% url 'career_detail' rec.career.slug %}" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">
+            View Details →
+          </a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div style="grid-column: 1 / -1; padding: 40px; text-align: center; background: #fff; border-radius: 16px;">
+      <h3>No careers matched your current filter criteria.</h3>
+      <p style="color: var(--text-secondary); margin-top: 8px;">Try clearing search keywords or selecting "All Careers".</p>
+      <a href="{% url 'careers' %}" class="btn btn-primary" style="margin-top: 16px;">Reset Filters</a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

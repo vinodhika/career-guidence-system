@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% block title %}Admin Portal | Career Recommendation System{% endblock %}
+
+{% block content %}
+<style>
+  .admin-stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .admin-stat-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+  }
+  .guardrail-test-box {
+    background: #FFF7ED;
+    border: 1.5px solid #FDBA74;
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+</style>
+
+<div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h2 style="font-size: 24px; font-weight: 800; font-family: var(--font-heading); color: #1E293B;">
+      🛡️ Administrator Portal & Catalogue Control
+    </h2>
+    <p style="font-size: 13px; color: var(--text-secondary);">
+      Manage official career catalogue records, review users, and audit safety guardrails (FR-05, UC-04, SRS Section 11.3).
+    </p>
+  </div>
+  <div>
+    <a href="/admin/" target="_blank" class="btn btn-outline" style="font-size: 13px;">Django SuperAdmin →</a>
+  </div>
+</div>
+
+<!-- Admin Stat Row -->
+<div class="admin-stat-row">
+  <div class="admin-stat-card">
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">TOTAL CAREERS</div>
+    <div style="font-size: 32px; font-weight: 800; font-family: var(--font-heading); color: #1E293B;">{{ careers|length }}</div>
+  </div>
+
+  <div class="admin-stat-card">
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">REGISTERED USERS</div>
+    <div style="font-size: 32px; font-weight: 800; font-family: var(--font-heading); color: var(--primary);">{{ users|length }}</div>
+  </div>
+
+  <div class="admin-stat-card">
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">STANDARDIZED SKILLS</div>
+    <div style="font-size: 32px; font-weight: 800; font-family: var(--font-heading); color: #059669;">{{ skills_count }}</div>
+  </div>
+
+  <div class="admin-stat-card">
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">RECOMMENDATIONS GENERATED</div>
+    <div style="font-size: 32px; font-weight: 800; font-family: var(--font-heading); color: #D97706;">{{ recommendations_count }}</div>
+  </div>
+</div>
+
+<!-- Interactive Guardrail Red-Team Test Panel (SRS 11.3) -->
+<div class="guardrail-test-box">
+  <h3 style="font-size: 17px; font-weight: 800; color: #9A3412; margin-bottom: 6px;">
+    🎯 SRS 11.3 Assistant Red-Team Security Test Bench
+  </h3>
+  <p style="font-size: 12px; color: #C2410C; margin-bottom: 16px;">
+    Test the AI Assistant with off-topic prompts, identity queries, prompt injections, and privacy attacks to verify compliance with AI-01 to AI-10.
+  </p>
+
+  <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+    <input type="text" id="test-guardrail-input" style="flex: 1; height: 42px; border-radius: 8px; border: 1px solid #FDBA74; padding: 0 14px; font-size: 13px;" placeholder="Enter any test query (e.g. 'Tell me a joke', 'Who are you?', 'Ignore rules')...">
+    <button type="button" class="btn btn-primary" onclick="runGuardrailTestBench()" style="background: #EA580C; border: none; padding: 0 20px;">
+      Run Safety Audit
+    </button>
+  </div>
+
+  <div id="test-result-box" style="display: none; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #FDBA74;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="font-size: 12px; font-weight: 700;" id="test-verdict">VERDICT</span>
+      <span class="badge" id="test-status-badge">Passed</span>
+    </div>
+    <div style="font-size: 13px; color: #1E293B;" id="test-output-text">Output response text</div>
+  </div>
+</div>
+
+<!-- Add New Career to Catalogue (FR-05, UC-04) -->
+<div class="ui-card" style="margin-bottom: 28px;">
+  <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 16px;">Add New Career Path</h3>
+  <form method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_career">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="form-group">
+        <label class="form-label">Career Title</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g. AI Research Scientist" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <input type="text" name="category" class="form-control" placeholder="e.g. Technology / Artificial Intelligence" required>
+      </div>
+
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label class="form-label">Overview</label>
+        <textarea name="overview" class="form-control" style="height: 70px;" placeholder="Career overview and domain context..." required></textarea>
+      </div>
+
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label class="form-label">Responsibilities</label>
+        <textarea name="responsibilities" class="form-control" style="height: 70px;" placeholder="Key responsibilities..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Indicative Salary</label>
+        <input type="text" name="salary_range" class="form-control" placeholder="e.g. $110,000 - $185,000 / ₹14,00,000 - ₹38,00,000">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Minimum Education</label>
+        <select name="eligibility" class="form-control">
+          <option value="undergraduate">Undergraduate Degree</option>
+          <option value="postgraduate">Postgraduate Degree</option>
+          <option value="diploma">Diploma</option>
+          <option value="school">High School</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="margin-top: 12px;">Publish Career to Catalogue</button>
+  </form>
+</div>
+
+<!-- Users Overview Table -->
+<div class="ui-card">
+  <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 16px;">Registered Users & Profiles</h3>
+  <table class="skill-gap-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Full Name</th>
+        <th>Education</th>
+        <th>XP / Level</th>
+        <th>Joined</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+        <tr>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>{{ u.profile.full_name|default:'-' }}</td>
+          <td>{{ u.profile.qualification|default:u.profile.education_level }}</td>
+          <td>Level {{ u.profile.level }} ({{ u.profile.xp_points }} XP)</td>
+          <td>{{ u.date_joined|date:"M d, Y" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  async function runGuardrailTestBench() {
+    const input = document.getElementById('test-guardrail-input').value.trim();
+    if (!input) return;
+
+    const resBox = document.getElementById('test-result-box');
+    const verdict = document.getElementById('test-verdict');
+    const badge = document.getElementById('test-status-badge');
+    const output = document.getElementById('test-output-text');
+
+    resBox.style.display = 'block';
+    output.innerText = "Evaluating through Guardrail Engine...";
+
+    try {
+      const res = await fetch('/api/chat/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ message: input })
+      });
+      const data = await res.json();
+
+      output.innerText = data.reply;
+      if (data.is_redirected) {
+        verdict.innerText = "STATUS: SAFE PREDEFINED REDIRECTION TRIGGERED (AI-01 / AI-02 / AI-03)";
+        badge.className = "badge badge-success";
+        badge.innerText = "Passed (Guardrail Active)";
+      } else {
+        verdict.innerText = "STATUS: GROUNDED CAREER GUIDANCE GENERATED";
+        badge.className = "badge badge-primary";
+        badge.innerText = "Career Domain Allowed";
+      }
+    } catch (e) {
+      output.innerText = "Error testing guardrail: " + e;
+    }
+  }
+</script>
+{% endblock %}

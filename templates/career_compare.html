@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Compare Careers | Career Recommendation System{% endblock %}
+
+{% block content %}
+<style>
+  .compare-selector-bar {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .compare-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .compare-col-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .compare-header {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .compare-metric-row {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .compare-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+</style>
+
+<div style="margin-bottom: 24px;">
+  <h2 style="font-size: 24px; font-weight: 800; font-family: var(--font-heading); color: #1E293B;">
+    ⚖️ Side-by-Side Career Comparison
+  </h2>
+  <p style="font-size: 13px; color: var(--text-secondary);">
+    Compare requirements, match scores, salaries, and skill gaps across selected paths.
+  </p>
+</div>
+
+<!-- Career Selectors -->
+<form method="GET" class="compare-selector-bar">
+  <span style="font-weight: 700; font-size: 13px;">Select Careers to Compare:</span>
+  <select name="c1" class="compare-select">
+    {% for c in all_careers %}
+      <option value="{{ c.slug }}" {% if c.slug == selected_slugs.0 %}selected{% endif %}>{{ c.title }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="c2" class="compare-select">
+    {% for c in all_careers %}
+      <option value="{{ c.slug }}" {% if c.slug == selected_slugs.1 %}selected{% endif %}>{{ c.title }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="c3" class="compare-select">
+    <option value="">-- None --</option>
+    {% for c in all_careers %}
+      <option value="{{ c.slug }}" {% if c.slug == selected_slugs.2 %}selected{% endif %}>{{ c.title }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit" class="btn btn-primary" style="padding: 8px 18px; font-size: 13px;">Compare Now</button>
+</form>
+
+<!-- Comparison Grid -->
+<div class="comparison-grid">
+  {% for item in compared_careers %}
+    <div class="compare-col-card">
+      <div class="compare-header">
+        <span class="badge badge-primary" style="margin-bottom: 8px;">{{ item.career.category }}</span>
+        <h3 style="font-size: 20px; font-weight: 800; color: #1E293B;">{{ item.career.title }}</h3>
+        <div style="font-size: 28px; font-weight: 800; color: #059669; font-family: var(--font-heading); margin-top: 8px;">
+          {{ item.rec.score_round|default:'90' }}% Match
+        </div>
+      </div>
+
+      <div class="compare-metric-row">
+        <div class="compare-lbl">Salary Range</div>
+        <div style="font-size: 14px; font-weight: 700; color: #059669;">{{ item.career.salary_range }}</div>
+        <div style="font-size: 11px; color: var(--text-muted);">{{ item.career.salary_source }}</div>
+      </div>
+
+      <div class="compare-metric-row">
+        <div class="compare-lbl">Market Outlook</div>
+        <div style="font-size: 13px; font-weight: 600; color: #2563EB;">{{ item.career.job_outlook }}</div>
+      </div>
+
+      <div class="compare-metric-row">
+        <div class="compare-lbl">Education Eligibility</div>
+        <div style="font-size: 13px; font-weight: 600;">{{ item.career.eligibility_education|title }}</div>
+        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">{{ item.career.preferred_education }}</div>
+      </div>
+
+      <div class="compare-metric-row">
+        <div class="compare-lbl">Skills Matched ({{ item.matched_skills|length }})</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+          {% for s in item.matched_skills %}
+            <span class="badge badge-success">{{ s.name }}</span>
+          {% empty %}
+            <span style="font-size: 12px; color: var(--text-muted);">None matched yet</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="compare-metric-row">
+        <div class="compare-lbl">Skill Gaps to Learn ({{ item.missing_skills|length }})</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+          {% for s in item.missing_skills %}
+            <span class="badge" style="background: #FEF2F2; color: #DC2626;">{{ s.name }}</span>
+          {% empty %}
+            <span style="font-size: 12px; color: #059669;">✓ All core skills acquired!</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; gap: 8px;">
+        <a href="{% url 'career_detail' item.career.slug %}" class="btn btn-outline" style="flex: 1; font-size: 12px;">Full Specs</a>
+        <a href="{% url 'career_roadmap' item.career.slug %}" class="btn btn-primary" style="flex: 1; font-size: 12px;">Roadmap</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

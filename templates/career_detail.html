@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% block title %}{{ career.title }} | Career Details & Skill Gap Analysis{% endblock %}
+
+{% block content %}
+<style>
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 2.3fr 1fr;
+    gap: 28px;
+  }
+  .banner-header {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 28px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .match-breakdown-card {
+    background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+    border: 1px solid #BFDBFE;
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .breakdown-box {
+    background: #fff;
+    border-radius: var(--radius-md);
+    padding: 16px;
+    border: 1px solid #E2E8F0;
+    text-align: center;
+  }
+  .breakdown-num {
+    font-size: 26px;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: var(--primary);
+  }
+  .skill-gap-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+  }
+  .skill-gap-table th, .skill-gap-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+  }
+  .skill-gap-table th {
+    background: #F8FAFC;
+    color: var(--text-secondary);
+    font-weight: 700;
+  }
+</style>
+
+<div class="banner-header">
+  <div>
+    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+      <span class="badge badge-primary">{{ career.category }}</span>
+      <span class="badge badge-success">Match Score: {{ recommendation.score_round|default:'90' }}%</span>
+    </div>
+    <h1 style="font-size: 28px; font-weight: 800; font-family: var(--font-heading); color: #1E293B; margin-bottom: 8px;">
+      {{ career.title }}
+    </h1>
+    <p style="font-size: 14px; color: var(--text-secondary); max-width: 780px;">
+      {{ career.overview }}
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 10px;">
+    <button class="btn btn-outline" onclick="toggleFavoriteCareer({{ career.id }}, this)">
+      {% if is_favorited %}❤️ Saved{% else %}🤍 Bookmark{% endif %}
+    </button>
+    {% if roadmap %}
+      <a href="{% url 'career_roadmap' career.slug %}" class="btn btn-primary">
+        View Learning Roadmap →
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <!-- Left Main Column -->
+  <div>
+    <!-- Transparent Match Explanation (SRS FR-24) -->
+    <div class="match-breakdown-card">
+      <h3 style="font-size: 16px; font-weight: 800; color: #1E293B;">
+        📊 Transparent Recommendation Analysis
+      </h3>
+      <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+        Calculated using SRS 3.6 weighted factors: (Interest × 0.40) + (Education × 0.30) + (Skills × 0.30)
+      </p>
+
+      <div class="breakdown-row">
+        <div class="breakdown-box">
+          <div class="breakdown-num">{{ recommendation.interest_fit|floatformat:0 }}%</div>
+          <div style="font-size: 12px; font-weight: 700; margin-top: 4px;">Interest Alignment (40%)</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Subject & domain synergy</div>
+        </div>
+
+        <div class="breakdown-box">
+          <div class="breakdown-num">{{ recommendation.education_fit|floatformat:0 }}%</div>
+          <div style="font-size: 12px; font-weight: 700; margin-top: 4px;">Education Alignment (30%)</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Qualification eligibility</div>
+        </div>
+
+        <div class="breakdown-box">
+          <div class="breakdown-num">{{ recommendation.skills_fit|floatformat:0 }}%</div>
+          <div style="font-size: 12px; font-weight: 700; margin-top: 4px;">Skills Alignment (30%)</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Technical & soft skill match</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; padding: 12px; background: #fff; border-radius: 8px; font-size: 12px; color: #334155; line-height: 1.6;">
+        <strong>Detailed Factor Breakdown:</strong><br>
+        {{ recommendation.explanation|linebreaksbr }}
+      </div>
+    </div>
+
+    <!-- Skill Gap Analysis (SRS FR-32 to FR-34) -->
+    <div class="ui-card" style="margin-bottom: 24px;">
+      <h3 style="font-size: 18px; font-weight: 800; color: #1E293B; margin-bottom: 6px;">
+        🎯 Skill Gap Analysis
+      </h3>
+      <p style="font-size: 13px; color: var(--text-secondary);">
+        Comparison between your current skills and expectations for {{ career.title }}.
+      </p>
+
+      <table class="skill-gap-table">
+        <thead>
+          <tr>
+            <th>Skill Name</th>
+            <th>Your Proficiency</th>
+            <th>Required Proficiency</th>
+            <th>Gap Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in matched_skills %}
+            <tr>
+              <td><strong>{{ s.name }}</strong></td>
+              <td><span class="badge badge-success">{{ s.user_prof }}</span></td>
+              <td>{{ s.req_prof }}</td>
+              <td><span style="color: #059669; font-weight: 700;">✓ Matched</span></td>
+            </tr>
+          {% endfor %}
+
+          {% for s in developing_skills %}
+            <tr>
+              <td><strong>{{ s.name }}</strong></td>
+              <td><span class="badge badge-warning">{{ s.user_prof }}</span></td>
+              <td>{{ s.req_prof }}</td>
+              <td><span style="color: #D97706; font-weight: 700;">⚠️ Upgrade Needed</span></td>
+            </tr>
+          {% endfor %}
+
+          {% for s in gap_skills %}
+            <tr>
+              <td><strong>{{ s.name }}</strong></td>
+              <td><span class="badge" style="background:#F1F5F9; color:#64748B;">Not in Profile</span></td>
+              <td>{{ s.req_prof }} ({{ s.importance }})</td>
+              <td><span style="color: #DC2626; font-weight: 700;">✗ Skill Gap</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if gap_skills %}
+        <div style="margin-top: 20px; padding: 14px; background: #FEF2F2; border-radius: 8px; border: 1px solid #FECACA; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 13px; color: #991B1B;">
+            <strong>Action Item:</strong> You have {{ gap_skills|length }} missing skills to acquire for this role.
+          </div>
+          <a href="{% url 'roadmap' %}" class="btn btn-primary" style="font-size: 12px; padding: 6px 14px;">
+            Start Gap Roadmap →
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Responsibilities & Work Environment -->
+    <div class="ui-card">
+      <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 12px;">Key Responsibilities</h3>
+      <p style="font-size: 13px; line-height: 1.7; color: #334155; margin-bottom: 20px;">
+        {{ career.responsibilities|linebreaksbr }}
+      </p>
+
+      {% if career.work_environment %}
+        <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 8px;">Work Environment & Industry</h4>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+          {{ career.work_environment }}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Sidebar Info -->
+  <div>
+    <!-- Compensation Card -->
+    <div class="ui-card" style="margin-bottom: 20px;">
+      <h4 style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px;">Indicative Salary Range</h4>
+      <div style="font-size: 20px; font-weight: 800; font-family: var(--font-heading); color: #059669; margin-bottom: 6px;">
+        {{ career.salary_range }}
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+        Source: {{ career.salary_source }}
+      </div>
+      <div style="font-size: 12px; font-weight: 600; color: #1E293B;">
+        📈 Job Market Outlook: <span style="color: #2563EB;">{{ career.job_outlook }}</span>
+      </div>
+    </div>
+
+    <!-- Education Pathway -->
+    <div class="ui-card" style="margin-bottom: 20px;">
+      <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Education Requirements</h4>
+      <div style="font-size: 12px; margin-bottom: 8px;">
+        <span style="color: var(--text-muted);">Minimum Eligibility:</span><br>
+        <strong>{{ career.eligibility_education|title }}</strong>
+      </div>
+      <div style="font-size: 12px; margin-bottom: 12px;">
+        <span style="color: var(--text-muted);">Preferred Background:</span><br>
+        <strong>{{ career.preferred_education }}</strong>
+      </div>
+      {% if career.entry_routes %}
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+          <span style="color: var(--text-muted);">Entry Routes:</span><br>
+          {{ career.entry_routes }}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Certifications -->
+    {% if career.certifications %}
+      <div class="ui-card" style="margin-bottom: 20px;">
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Recommended Certifications</h4>
+        <p style="font-size: 12px; color: #334155; line-height: 1.6;">
+          {{ career.certifications }}
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Related Careers -->
+    <div class="ui-card">
+      <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Related Careers</h4>
+      {% for rel in related_careers %}
+        <a href="{% url 'career_detail' rel.slug %}" style="display: block; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 13px; font-weight: 600; color: var(--primary);">
+          {{ rel.title }} →
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

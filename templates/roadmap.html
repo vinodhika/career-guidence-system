@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% block title %}Interactive Career Roadmap | Ascento Tracker{% endblock %}
+
+{% block content %}
+<style>
+  .roadmap-page-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 28px;
+  }
+  .gamify-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .gamify-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .level-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .level-num {
+    font-size: 32px;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: #1E293B;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .xp-track {
+    height: 10px;
+    background: #F1F5F9;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #F59E0B 0%, #D97706 100%);
+    border-radius: 999px;
+  }
+  .xp-ratio-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: right;
+  }
+  .streak-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-light);
+  }
+  .streak-icon-box {
+    font-size: 26px;
+  }
+  .streak-val {
+    font-size: 24px;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: #1E293B;
+  }
+  .streak-lbl {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .points-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-light);
+  }
+  .achievement-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .achievement-item:last-child {
+    border-bottom: none;
+  }
+
+  /* Main Roadmap Column */
+  .roadmap-main-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 28px 32px;
+    box-shadow: var(--shadow-sm);
+  }
+  .roadmap-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .roadmap-career-select {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    background: #fff;
+  }
+  .roadmap-completion-bar {
+    height: 8px;
+    background: #F1F5F9;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .roadmap-completion-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #D97706 0%, #B45309 100%);
+    border-radius: 999px;
+  }
+
+  /* Milestone Items */
+  .milestones-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .milestone-node {
+    border-radius: var(--radius-md);
+    border: 1.5px solid #E2E8F0;
+    padding: 20px;
+    background: #fff;
+    transition: all 0.2s;
+  }
+  .milestone-node.completed {
+    border-color: #A7F3D0;
+    background: #F0FDF4;
+  }
+  .milestone-node.in_progress {
+    border-color: #FED7AA;
+    background: #FFFBEB;
+  }
+  .node-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .node-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .status-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .status-circle.completed {
+    background: #10B981;
+    color: #fff;
+  }
+  .status-circle.in_progress {
+    background: #F59E0B;
+    color: #fff;
+  }
+  .status-circle.not_started {
+    background: #E2E8F0;
+    color: #64748B;
+  }
+  .node-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .xp-reward-pill {
+    background: #EFF6FF;
+    color: #2563EB;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .node-body {
+    padding-left: 36px;
+  }
+  .node-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .node-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .status-toggle-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-comp {
+    background: #10B981;
+    color: #fff;
+  }
+  .btn-prog {
+    background: #F59E0B;
+    color: #fff;
+  }
+  .btn-not {
+    background: #E2E8F0;
+    color: #475569;
+  }
+</style>
+
+<div class="roadmap-page-layout">
+  <!-- Left Gamified Sidebar matching UI Screen 2 -->
+  <div class="gamify-sidebar">
+    <div class="gamify-card">
+      <div class="level-title-row">
+        <span>⭐</span>
+        <span>Level Progress</span>
+      </div>
+      <div class="level-num">Level {{ profile.level }}</div>
+      <div class="xp-track">
+        <div class="xp-fill" style="width: {{ profile.level_progress_percent }}%;"></div>
+      </div>
+      <div class="xp-ratio-text">{{ profile.xp_points }} / {{ profile.xp_needed }} XP</div>
+
+      <!-- Streak Box -->
+      <div class="streak-box">
+        <div class="streak-icon-box">🔥</div>
+        <div>
+          <div class="streak-val">{{ profile.streak_days }}</div>
+          <div class="streak-lbl">Day Streak</div>
+        </div>
+      </div>
+
+      <!-- Total Points Box -->
+      <div class="points-box">
+        <div class="streak-icon-box">🏆</div>
+        <div>
+          <div class="streak-val">{{ profile.total_points }}</div>
+          <div class="streak-lbl">Total Points</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievements Widget -->
+    <div class="gamify-card">
+      <div style="font-size: 13px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span>🎖️</span>
+        <span>Achievements</span>
+      </div>
+
+      <div class="achievement-item">
+        <div style="font-size: 20px;">🎯</div>
+        <div>
+          <strong style="font-size: 12px; display: block;">First Steps</strong>
+          <span style="font-size: 10px; color: var(--text-secondary);">Complete your first milestone</span>
+        </div>
+      </div>
+
+      <div class="achievement-item">
+        <div style="font-size: 20px;">🔥</div>
+        <div>
+          <strong style="font-size: 12px; display: block;">Streak Master</strong>
+          <span style="font-size: 10px; color: var(--text-secondary);">Maintain a 7-day streak</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Roadmap Column matching UI Screen 2 -->
+  <div class="roadmap-main-card">
+    <div class="roadmap-header-top">
+      <div>
+        <h2 style="font-size: 22px; font-weight: 800; font-family: var(--font-heading); margin-bottom: 4px;">
+          {{ roadmap.title }}
+        </h2>
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          {{ roadmap.subtitle }}
+        </p>
+      </div>
+
+      <div style="text-align: right;">
+        <select class="roadmap-career-select" onchange="location.href='/roadmap/' + this.value + '/'">
+          {% for r in all_roadmaps %}
+            <option value="{{ r.career.slug }}" {% if r.id == roadmap.id %}selected{% endif %}>
+              {{ r.career.title }}
+            </option>
+          {% endfor %}
+        </select>
+        <div style="font-size: 12px; font-weight: 700; color: #D97706; margin-top: 8px;">
+          {{ completed_count }}/{{ total_count }} Complete ({{ roadmap_completion_pct }}%)
+        </div>
+      </div>
+    </div>
+
+    <!-- Top completion progress bar -->
+    <div class="roadmap-completion-bar">
+      <div class="roadmap-completion-fill" style="width: {{ roadmap_completion_pct }}%;"></div>
+    </div>
+
+    <!-- Milestones List -->
+    <div class="milestones-flow">
+      {% for item in milestones_data %}
+        <div class="milestone-node {{ item.progress.status }}">
+          <div class="node-header">
+            <div class="node-title-group">
+              <div class="status-circle {{ item.progress.status }}">
+                {% if item.progress.status == 'completed' %}✓
+                {% elif item.progress.status == 'in_progress' %}●
+                {% else %}{{ item.milestone.order }}
+                {% endif %}
+              </div>
+              <h4 style="font-size: 15px; font-weight: 800; color: #1E293B;">
+                {{ item.milestone.title }}
+              </h4>
+            </div>
+
+            <div class="node-tags">
+              <span class="badge {% if item.milestone.level == 'Beginner' %}badge-success{% elif item.milestone.level == 'Intermediate' %}badge-primary{% else %}badge-warning{% endif %}">
+                {{ item.milestone.level }}
+              </span>
+              <span class="xp-reward-pill">+{{ item.milestone.xp_reward }} XP</span>
+            </div>
+          </div>
+
+          <div class="node-body">
+            <p class="node-desc">{{ item.milestone.description }}</p>
+
+            {% if item.progress.status == 'in_progress' %}
+              <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #D97706; margin-bottom: 4px;">
+                  <span>Progress</span>
+                  <span>{{ item.progress.progress_percent }}%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill fill-orange" style="width: {{ item.progress.progress_percent }}%;"></div>
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="node-footer">
+              <div style="display: flex; gap: 16px;">
+                <span>⏱️ {{ item.milestone.estimated_hours }}h estimated</span>
+                {% if item.progress.completed_date %}
+                  <span style="color: #10B981; font-weight: 600;">✓ Completed {{ item.progress.completed_date }}</span>
+                {% endif %}
+                <a href="{{ item.milestone.resource_url }}" target="_blank" style="color: var(--primary); text-decoration: underline;">
+                  📚 Resource: {{ item.milestone.resource_provider }}
+                </a>
+              </div>
+
+              <div>
+                <button type="button" class="status-toggle-btn {% if item.progress.status == 'completed' %}btn-comp{% elif item.progress.status == 'in_progress' %}btn-prog{% else %}btn-not{% endif %}"
+                        onclick="toggleMilestoneStatus({{ item.milestone.id }}, '{{ item.progress.status }}')">
+                  {% if item.progress.status == 'completed' %}Completed (Click to Reset)
+                  {% elif item.progress.status == 'in_progress' %}In Progress (Click to Complete)
+                  {% else %}Start Milestone
+                  {% endif %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

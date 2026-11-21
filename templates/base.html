@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Career Recommendation System | CareerWithinU{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="brand-container">
+        <div class="brand-logo-icon">
+          <i data-lucide="compass"></i>
+        </div>
+        <div class="brand-title">Career<span>WithinU</span></div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="{% url 'dashboard' %}" class="nav-item {% if active_nav == 'dashboard' %}active{% endif %}">
+          <i data-lucide="layout-grid"></i>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="{% url 'careers' %}" class="nav-item {% if active_nav == 'careers' %}active{% endif %}">
+          <i data-lucide="briefcase"></i>
+          <span>Explore Careers</span>
+        </a>
+
+        <a href="{% url 'chat' %}" class="nav-item {% if active_nav == 'chat' %}active{% endif %}">
+          <i data-lucide="message-square"></i>
+          <span>AI Chat</span>
+        </a>
+
+        <a href="{% url 'roadmap' %}" class="nav-item {% if active_nav == 'learning' %}active{% endif %}">
+          <i data-lucide="graduation-cap"></i>
+          <span>Learning & Roadmap</span>
+        </a>
+
+        <a href="{% url 'career_compare' %}" class="nav-item {% if active_nav == 'compare' %}active{% endif %}">
+          <i data-lucide="git-compare"></i>
+          <span>Compare Careers</span>
+        </a>
+
+        <a href="{% url 'profile_wizard' %}" class="nav-item {% if active_nav == 'profile' %}active{% endif %}">
+          <i data-lucide="user-check"></i>
+          <span>My Profile & Skills</span>
+        </a>
+
+        {% if request.user.is_staff %}
+        <a href="{% url 'admin_portal' %}" class="nav-item {% if active_nav == 'admin' %}active{% endif %}">
+          <i data-lucide="shield-check"></i>
+          <span>Admin Portal</span>
+        </a>
+        {% endif %}
+      </nav>
+
+      <!-- Upgrade to Pro Card -->
+      <div class="sidebar-pro-card">
+        <div style="font-size: 24px; margin-bottom: 6px;">✨</div>
+        <h4>Upgrade to PRO</h4>
+        <p>Get 1 month free & unlock all premium assessment features!</p>
+        <button class="pro-btn" onclick="alert('PRO features unlocked in demo!')">Upgrade Now</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Shell -->
+    <div class="app-main">
+      <!-- Top Navbar -->
+      <header class="top-navbar">
+        <div class="search-bar-wrapper">
+          <i data-lucide="search"></i>
+          <form action="{% url 'careers' %}" method="GET">
+            <input type="text" name="q" placeholder="Search careers, skills, roadmaps..." value="{{ query|default:'' }}">
+          </form>
+        </div>
+
+        <div class="top-nav-actions">
+          <a href="{% url 'chat' %}" class="ai-assistant-pill">
+            <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+            <span>AI Assistant</span>
+          </a>
+
+          <button class="icon-button" title="Notifications" onclick="alert('No unread notifications.')">
+            <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+            <span class="badge-dot">3</span>
+          </button>
+
+          <a href="{% url 'profile_wizard' %}" class="user-profile-badge">
+            <div class="user-avatar-circle">
+              {{ profile.full_name|default:request.user.username|slice:":1"|upper }}
+            </div>
+            <span class="user-name-text">{{ profile.full_name|default:request.user.username }}</span>
+          </a>
+
+          <a href="{% url 'logout' %}" class="icon-button" title="Sign Out">
+            <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+          </a>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="page-container">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert-box {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+              <span>{{ message }}</span>
+              <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; font-weight:bold;">&times;</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
